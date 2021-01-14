@@ -1,5 +1,5 @@
 import * as helper from "./helper";
-import React, { Component, memo, useMemo } from "react";
+import React, {Component, memo, useMemo} from "react";
 import {
   StyleSheet,
   PanResponder,
@@ -12,11 +12,11 @@ import Line from "./line";
 import Circle from "./circle";
 import PropTypes from "prop-types";
 
-const Width = Dimensions.get("window").width;
+const Width = Dimensions.get("window").width - 20;
 const Height = Dimensions.get("window").height;
 const isVertical = Height > Width;
-const Top = isVertical ? ((Height - Width) / 2.0) * 1.25 : 10;
-const Radius = isVertical ? Width / 10 : Width / 25;
+const Top = isVertical ? ((Height - Width) / 2.0) * 1.25 : 12;
+const Radius = isVertical ? Width / 12 : Width / 25;
 
 export default class GesturePassword extends Component {
   constructor(props) {
@@ -30,21 +30,37 @@ export default class GesturePassword extends Component {
     // getInitialState
     let circles = [];
     let Margin = Radius;
+
+    let paddingHorrontal = Width * 0.18;
+    let paddingVertical = Height * 0.15;
+    // console.log(Radius, Width)
+
     for (let i = 0; i < 9; i++) {
       let p = i % 3;
       let q = parseInt(i / 3);
-      circles.push({
-        isActive: false,
-        x: p * (Radius * 2 + Margin) + Margin + Radius,
-        y: q * (Radius * 2 + Margin) + Margin + Radius,
-      });
-    }
 
+      if (p == 0) {
+        circles.push({
+          isActive: false,
+          x: p * (Radius * 2 ) + (Margin * 0) + paddingHorrontal,
+          y: q * (Radius * 2 + Margin + 30) + Margin + paddingVertical,
+        });
+      } else {
+        circles.push({
+          isActive: false,
+          x: p * (Radius * 2 + (Margin * 1.4)) + (Margin * 0.3) + paddingHorrontal,
+          y: q * (Radius * 2 + Margin + 30) + Margin + paddingVertical,
+        });
+      }
+
+    }
+    //console.log(circles);
     this.state = {
       circles: circles,
       lines: [],
     };
   }
+
   _panResponder = PanResponder.create({
     // 要求成为响应者：
 
@@ -61,11 +77,13 @@ export default class GesturePassword extends Component {
     onPanResponderRelease: (e, g) => this.onEnd(e, g),
   });
 
+  flagReset = 0; // if props pass to lib bigger it when reset
+
   render() {
     let color =
-      this.props.status === "wrong"
-        ? this.props.wrongColor
-        : this.props.rightColor;
+        this.props.status === "wrong"
+            ? this.props.wrongColor
+            : this.props.rightColor;
 
     const {
       textStyle,
@@ -79,37 +97,43 @@ export default class GesturePassword extends Component {
       outerCircle,
       transparentLine,
       children,
+      doAction
     } = this.props;
 
+    if (doAction > this.flagReset) {
+      this.resetActive();
+      this.flagReset = doAction;
+    }
+
     return (
-      <Container
-        textStyle={textStyle}
-        style={style}
-        status={status}
-        message={this.state.message || message}
-        wrongColor={wrongColor}
-        rightColor={rightColor}
-        panHandlers={this._panResponder.panHandlers}
-        userAddedChildren={children}
-      >
-        <Circles
-          circles={this.state.circles}
-          status={status}
-          normalColor={normalColor}
-          wrongColor={wrongColor}
-          rightColor={rightColor}
-          innerCircle={innerCircle}
-          outerCircle={outerCircle}
-        />
-        <Lines
-          lines={this.state.lines}
-          status={status}
-          wrongColor={wrongColor}
-          rightColor={rightColor}
-          transparentLine={transparentLine}
-        />
-        <Line ref="line" color={transparentLine ? "#00000000" : color} />
-      </Container>
+        <Container
+            textStyle={textStyle}
+            style={[style]}
+            status={status}
+            message={this.state.message || message}
+            wrongColor={wrongColor}
+            rightColor={rightColor}
+            panHandlers={this._panResponder.panHandlers}
+            userAddedChildren={children}
+        >
+          <Circles
+              circles={this.state.circles}
+              status={status}
+              normalColor={normalColor}
+              wrongColor={wrongColor}
+              rightColor={rightColor}
+              innerCircle={innerCircle}
+              outerCircle={outerCircle}
+          />
+          <Lines
+              lines={this.state.lines}
+              status={status}
+              wrongColor={wrongColor}
+              rightColor={rightColor}
+              transparentLine={transparentLine}
+          />
+          <Line ref="line" color={transparentLine ? "#00000000" : color}/>
+        </Container>
     );
   }
 
@@ -117,7 +141,7 @@ export default class GesturePassword extends Component {
     this.state.circles[index].isActive = true;
 
     let circles = [...this.state.circles];
-    this.setState({ circles });
+    this.setState({circles});
   }
 
   resetActive() {
@@ -127,7 +151,7 @@ export default class GesturePassword extends Component {
     }
 
     let circles = [...this.state.circles];
-    this.setState({ circles });
+    this.setState({circles});
     this.props.onReset && this.props.onReset();
   }
 
@@ -135,8 +159,14 @@ export default class GesturePassword extends Component {
     let x = touch.x;
     let y = touch.y;
 
+    // console.log(this.state.circles);
+
     for (let i = 0; i < 9; i++) {
-      if (helper.isPointInCircle({ x, y }, this.state.circles[i], Radius)) {
+      if (helper.isPointInCircle(
+          {x, y},
+          this.state.circles[i],
+          Radius)
+      ) {
         return String(i);
       }
     }
@@ -146,13 +176,13 @@ export default class GesturePassword extends Component {
 
   getCrossChar(char) {
     let middles = "13457",
-      last = String(this.lastIndex);
+        last = String(this.lastIndex);
 
     if (middles.indexOf(char) > -1 || middles.indexOf(last) > -1) return false;
 
     let point = helper.getMiddlePoint(
-      this.state.circles[last],
-      this.state.circles[char],
+        this.state.circles[last],
+        this.state.circles[char],
     );
 
     for (let i = 0; i < middles.length; i++) {
@@ -171,14 +201,14 @@ export default class GesturePassword extends Component {
     this.isMoving = false;
 
     let x = isVertical
-      ? e.nativeEvent.pageX
-      : e.nativeEvent.pageX - Width / 3.4;
+        ? e.nativeEvent.pageX
+        : e.nativeEvent.pageX - Width / 3.4;
     let y = isVertical
-      ? e.nativeEvent.pageY - Top / 1.25
-      : e.nativeEvent.pageY - 30;
+        ? e.nativeEvent.pageY - Top / 1.25
+        : e.nativeEvent.pageY;
 
-    let lastChar = this.getTouchChar({ x, y });
-
+    let lastChar = this.getTouchChar({x, y});
+    console.log(lastChar);
     if (lastChar) {
       this.isMoving = true;
       this.lastIndex = Number(lastChar);
@@ -191,7 +221,7 @@ export default class GesturePassword extends Component {
         y: this.state.circles[this.lastIndex].y,
       };
 
-      this.refs.line.setNativeProps({ start: point, end: point });
+      this.refs.line.setNativeProps({start: point, end: point});
 
       this.props.onStart && this.props.onStart();
 
@@ -203,25 +233,28 @@ export default class GesturePassword extends Component {
 
   onMove = (e, g) => {
     if (this.isMoving) {
-      let x = isVertical
-        ? e.nativeEvent.pageX
-        : e.nativeEvent.pageX - Width / 3.4;
-      let y = isVertical
-        ? e.nativeEvent.pageY - Top / 1.25
-        : e.nativeEvent.pageY - 30;
 
-      this.refs.line.setNativeProps({ end: { x, y } });
+      let t = 0;
+
+      let x = isVertical
+          ? e.nativeEvent.pageX
+          : e.nativeEvent.pageX - Width / 3.4;
+      let y = isVertical
+          ? (e.nativeEvent.pageY - Top / 1.25) + t
+          : (e.nativeEvent.pageY - 30) + t;
+
+      this.refs.line.setNativeProps({end: {x, y}});
 
       let lastChar = null;
 
       if (
-        !helper.isPointInCircle(
-          { x, y },
-          this.state.circles[this.lastIndex],
-          Radius,
-        )
+          !helper.isPointInCircle(
+              {x, y},
+              this.state.circles[this.lastIndex],
+              Radius,
+          )
       ) {
-        lastChar = this.getTouchChar({ x, y });
+        lastChar = this.getTouchChar({x, y});
       }
 
       if (lastChar && this.sequence.indexOf(lastChar) === -1) {
@@ -261,7 +294,7 @@ export default class GesturePassword extends Component {
           y: this.state.circles[this.lastIndex].y,
         };
 
-        this.refs.line.setNativeProps({ start: point });
+        this.refs.line.setNativeProps({start: point});
       }
     }
 
@@ -275,8 +308,8 @@ export default class GesturePassword extends Component {
     this.lastIndex = -1;
     this.isMoving = false;
 
-    let origin = { x: 0, y: 0 };
-    this.refs.line.setNativeProps({ start: origin, end: origin });
+    let origin = {x: 0, y: 0};
+    this.refs.line.setNativeProps({start: origin, end: origin});
 
     this.props.onEnd && this.props.onEnd(password);
 
@@ -314,86 +347,92 @@ GesturePassword.defaultProps = {
 };
 
 const Container = memo(
-  ({
-    textStyle,
-    style,
-    status,
-    message,
-    wrongColor,
-    rightColor,
-    panHandlers,
-    children,
-    userAddedChildren,
-  }) => {
-    let color = status === "wrong" ? wrongColor : rightColor;
+    ({
+       textStyle,
+       style,
+       status,
+       message,
+       wrongColor,
+       rightColor,
+       panHandlers,
+       children,
+       userAddedChildren,
+     }) => {
+      let color = status === "wrong" ? wrongColor : rightColor;
 
-    const _styleContainer = useMemo(() => [styles.frame, style], [style]);
+      const _styleContainer = useMemo(() => [styles.frame, style], [style]);
 
-    const _styleText = useMemo(
-      () => [styles.msgText, textStyle, { color: color }],
-      [textStyle, color],
-    );
+      const _styleText = useMemo(
+          () => [styles.msgText, textStyle, {color: color}],
+          [textStyle, color],
+      );
+      return (
 
-    return (
-      <View style={_styleContainer}>
-        <View style={styles.message}>
-          <Text style={_styleText}>{message}</Text>
-        </View>
-        <View style={styles.board} {...panHandlers}>
-          {children}
-        </View>
-        {userAddedChildren}
-      </View>
-    );
-  },
+          <View style={[_styleContainer,
+
+          ]}>
+            <View style={styles.message}>
+              <Text style={_styleText}>{message}</Text>
+            </View>
+            <View style={[styles.board, {
+              marginLeft: 10,
+              // backgroundColor: 'rgba(190,190,190,0.58)'
+            }]} {...panHandlers}>
+              {children}
+            </View>
+            {userAddedChildren}
+          </View>
+
+      );
+    },
 );
 
 const Lines = memo(
-  ({ lines, status, wrongColor, rightColor, transparentLine }) => {
-    let color;
+    ({lines, status, wrongColor, rightColor, transparentLine}) => {
+      let color;
 
-    return lines.map(function(l, i) {
-      color = status === "wrong" ? wrongColor : rightColor;
-      color = transparentLine ? "#00000000" : color;
+      return lines.map(function (l, i) {
+        color = status === "wrong" ? wrongColor : rightColor;
+        color = transparentLine ? "#00000000" : color;
 
-      return <Line key={"l_" + i} color={color} start={l.start} end={l.end} />;
-    });
-  },
+        return <Line key={"l_" + i} color={color} start={l.start} end={l.end}/>;
+      });
+    },
 );
 
 const Circles = memo(
-  ({
-    circles,
-    status,
-    normalColor,
-    wrongColor,
-    rightColor,
-    innerCircle,
-    outerCircle,
-  }) => {
-    let fill, color, inner, outer;
+    ({
+       circles,
+       status,
+       normalColor,
+       wrongColor,
+       rightColor,
+       innerCircle,
+       outerCircle,
+     }) => {
+      let fill, color, inner, outer;
 
-    return circles.map(function(c, i) {
-      fill = c.isActive;
-      color = status === "wrong" ? wrongColor : rightColor;
-      inner = !!innerCircle;
-      outer = !!outerCircle;
+      return circles.map(function (c, i) {
+        fill = c.isActive;
+        color = status === "wrong" ? wrongColor : rightColor;
+        inner = !!innerCircle;
+        outer = !!outerCircle;
 
-      return (
-        <Circle
-          key={"c_" + i}
-          fill={fill}
-          normalColor={normalColor}
-          color={color}
-          x={c.x}
-          y={c.y}
-          r={Radius}
-          inner={inner}
-          outer={outer}
-        />
-      );
-    });
-  },
+        return (
+            <Circle
+                key={"c_" + i}
+                fill={fill}
+                normalColor={normalColor}
+                color={color}
+                x={c.x}
+                y={c.y}
+                r={Radius}
+                inner={inner}
+                outer={outer}
+            />
+        );
+      });
+    },
 );
 
 const styles = StyleSheet.create({

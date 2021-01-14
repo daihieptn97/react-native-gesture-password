@@ -1,12 +1,13 @@
-import { isEquals, getTransform } from "./helper";
-import React, { PureComponent } from "react";
-import { StyleSheet, View } from "react-native";
+import {isEquals, getTransform} from "./helper";
+import React, {PureComponent} from "react";
+import {StyleSheet, View} from "react-native";
 import PropTypes from "prop-types";
+
 export default class Line extends PureComponent {
   constructor(props) {
     super(props);
 
-    this.state = { ...props };
+    this.state = {...props};
   }
 
   setNativeProps(props) {
@@ -23,7 +24,7 @@ export default class Line extends PureComponent {
   }
 
   render() {
-    let { start, end, color, transparentLine } = this.state;
+    let {start, end, color, transparentLine} = this.state;
 
     if (isEquals(start, end)) return null;
 
@@ -31,31 +32,31 @@ export default class Line extends PureComponent {
     let length = transform.d;
     let angle = transform.a + "rad";
     let moveX = transform.x;
-    let moveY = transform.y;
+    let moveY = transform.y - 50;
 
     //for transparent line
     color = transparentLine ? "#00000000" : color;
 
     return (
-      <View
-        ref="line"
-        style={[
-          styles.line,
-          {
-            backgroundColor: color,
-            left: start.x,
-            top: start.y,
-            width: length,
-          },
-          {
-            transform: [
-              { translateX: moveX },
-              { translateY: moveY },
-              { rotateZ: angle },
-            ],
-          },
-        ]}
-      />
+        <View
+            ref="line"
+            style={[
+              styles.line,
+              {
+                backgroundColor: color,
+                left: start.x,
+                top: start.y,
+                width: length,
+              },
+              {
+                transform: [
+                  {translateX: moveX},
+                  {translateY: moveY},
+                  {rotateZ: angle},
+                ],
+              },
+            ]}
+        />
     );
   }
 }
@@ -74,8 +75,8 @@ Line.propTypes = {
 
 Line.defaultProps = {
   color: "#8E91A8",
-  start: { x: 0, y: 0 },
-  end: { x: 0, y: 0 },
+  start: {x: 0, y: 0},
+  end: {x: 0, y: 0},
 };
 
 const styles = StyleSheet.create({
